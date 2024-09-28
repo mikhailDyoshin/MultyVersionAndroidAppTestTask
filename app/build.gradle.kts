@@ -29,6 +29,62 @@ android {
             )
         }
     }
+
+    flavorDimensions += ("client")
+    productFlavors {
+        create("OperatorA") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorA"
+            versionNameSuffix = "1.0-OperatorA"
+        }
+        create("OperatorB") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorB"
+            versionNameSuffix = "1.0-OperatorB"
+        }
+        create("OperatorC") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorC"
+            versionNameSuffix = "1.0-OperatorC"
+        }
+        create("OperatorD") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorD"
+            versionNameSuffix = "1.0-OperatorD"
+        }
+        create("OperatorE") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorE"
+            versionNameSuffix = "1.0-OperatorE"
+        }
+        create("OperatorF") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorF"
+            versionNameSuffix = "1.0-OperatorF"
+        }
+        create("OperatorG") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorG"
+            versionNameSuffix = "1.0-OperatorG"
+        }
+        create("OperatorH") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorH"
+            versionNameSuffix = "1.0-OperatorH"
+        }
+        create("OperatorI") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorI"
+            versionNameSuffix = "1.0-OperatorI"
+        }
+        create("OperatorJ") {
+            dimension = "client"
+            applicationIdSuffix = ".operatorJ"
+            versionNameSuffix = "1.0-OperatorJ"
+        }
+
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
