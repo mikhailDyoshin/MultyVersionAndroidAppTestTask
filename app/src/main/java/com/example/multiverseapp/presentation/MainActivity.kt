@@ -1,41 +1,36 @@
-package com.example.multiverseapp
+package com.example.multiverseapp.presentation
 
-import com.example.multiverseapp.domain.gms.GmsLocationService
+import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.multiverseapp.R
+import com.example.multiverseapp.domain.gms.GmsLocationService
+import com.example.multiverseapp.presentation.mainScreen.MainScreen
+import com.example.multiverseapp.presentation.mainScreen.mvi.MainScreenReducer
+import com.example.multiverseapp.presentation.mainScreen.mvi.MainScreenViewModel
 import com.example.multiverseapp.ui.theme.MultiverseAppTheme
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val gmsLocationService = GmsLocationService(this)
+        val mainScreenReducer = MainScreenReducer(gmsLocationService)
+        val viewModel = MainScreenViewModel(mainScreenReducer)
 
         val requestPermissionLauncher = requestPermissionLauncher(onGranted = {
             Toast.makeText(
@@ -43,11 +38,12 @@ class MainActivity : ComponentActivity() {
                 "Permission granted",
                 Toast.LENGTH_SHORT
             ).show()
+            viewModel.fetchLocation()
         }, onShowPermissionRationale = {
             Toast.makeText(
                 this,
-                "Allow the app to use the location to get user's coordinates.",
-                Toast.LENGTH_LONG
+                this.getString(R.string.permission_rationale_message),
+                Toast.LENGTH_SHORT
             ).show()
         })
 
@@ -59,6 +55,7 @@ class MainActivity : ComponentActivity() {
                     "Loading location",
                     Toast.LENGTH_SHORT
                 ).show()
+                viewModel.fetchLocation()
             },
             onShowPermissionRationale = {
                 // Do nothing
@@ -69,29 +66,25 @@ class MainActivity : ComponentActivity() {
         setContent {
             MultiverseAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        // This composable should have a 'state' parameter, that controls its UI
+                    MainScreen(
+                        state = viewModel.state.value,
                         getLocation = {
-                            // I can make the function below to interact with a view-model,
-                            // to change its state that is applied to the UI
-                            // This way I can show dialogs or
                             requestLocationPermission(
                                 requestPermissionLauncher = requestPermissionLauncher,
                                 onPermissionGranted = {
-                                    // Here I call a method that gets user's location
-                                    // and updated the view-model's state
-                                    Toast.makeText(
-                                        this,
-                                        "Loading location",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    viewModel.fetchLocation()
                                 },
                                 onShowPermissionRationale = {
-                                    // Here I can display a dialog-window that says about
-                                    // necessity to allow the app to use the device location
-                                    requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                                    viewModel.displayPermissionRationale()
                                 }
                             )
+                        },
+                        requestPermission = {
+                            viewModel.hidePermissionRationale()
+                            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        },
+                        hidePermissionRationale = {
+                            viewModel.hidePermissionRationale()
                         },
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -132,7 +125,7 @@ class MainActivity : ComponentActivity() {
         onShowPermissionRationale: () -> Unit,
     ) {
 
-        val permission = android.Manifest.permission.ACCESS_FINE_LOCATION
+        val permission = Manifest.permission.ACCESS_FINE_LOCATION
 
         when {
             ContextCompat.checkSelfPermission(
@@ -155,54 +148,5 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(getLocation: () -> Unit, modifier: Modifier = Modifier) {
-
-    val context = LocalContext.current
-
-    val scope = rememberCoroutineScope()
-
-    val name = stringResource(id = R.string.client_name)
-    val color = colorResource(R.color.client_color)
-    Column(
-        Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Hello! I'm $name",
-            color = color,
-            modifier = modifier,
-            fontSize = 24.sp
-        )
-
-        Button(onClick = {
-            getLocation()
-            scope.launch {
-                val location = GmsLocationService(context).getUserLocation()
-                location
-                    .onSuccess {
-                        Log.d("MyLocation", location.toString())
-                    }
-                    .onFailure { e ->
-                        Log.d("MyLocation", "Failed to load location: $e")
-                    }
-            }
-
-        }, Modifier.padding(top = 20.dp)) {
-            Text(text = "Get location", fontSize = 20.sp)
-        }
-    }
-
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MultiverseAppTheme {
-        Greeting(getLocation = {})
     }
 }
